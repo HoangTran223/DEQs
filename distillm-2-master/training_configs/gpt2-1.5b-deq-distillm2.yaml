@@ -1,0 +1,45 @@
+# DEQ + DistiLLM-2: Qwen 1.5B SFT (teacher) -> DEQ-Qwen (student)
+
+# Model arguments
+model_name_or_path: ./models/qwen_0.5b
+ref_model_name_or_path: ./models/qwen_1.5b_sft
+torch_dtype: bfloat16
+attn_implementation: eager
+
+# Data training arguments
+# NOTE: uses existing GPT-2 DPO data. For best results,
+# regenerate DPO data with Qwen teacher/student using generate/generate.py
+dataset_mixer:
+  distillm-2-master/data/reformatted/gpt2: 1.0
+dataset_splits:
+- train
+- test
+preprocessing_num_workers: 8
+
+# DistiLLMTrainer arguments
+bf16: true
+do_eval: true
+eval_steps: 10000000
+gradient_accumulation_steps: 2
+gradient_checkpointing: false
+gradient_checkpointing_kwargs:
+  use_reentrant: False
+learning_rate: 5.0e-5
+log_level: info
+logging_steps: 10
+lr_scheduler_type: cosine
+max_length: 256
+max_prompt_length: 128
+num_train_epochs: 5
+optim: adamw_torch
+output_dir: ./distillm-2-master/outputs/qwen-deq-distillm2
+run_name: qwen-deq-distillm2
+per_device_train_batch_size: 4
+per_device_eval_batch_size: 16
+push_to_hub: false
+save_strategy: "epoch"
+save_total_limit: 5
+save_only_model: true
+seed: 42
+warmup_ratio: 0.1
+loss_type: distillm_v2

@@ -1,0 +1,46 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "json",
+  "dataset_size": 32646013,
+  "description": "",
+  "download_checksums": {
+    "/mnt/hungpv/projects/Span-FDD/distillm-2-master/data/reformatted/gpt2/train.json": {
+      "num_bytes": 33482724,
+      "checksum": null
+    }
+  },
+  "download_size": 33482724,
+  "features": {
+    "prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "chosen": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "rejected": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 66128737,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 32646013,
+      "num_examples": 11435,
+      "dataset_name": "json"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
