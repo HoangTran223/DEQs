@@ -217,7 +217,7 @@ def _log_vram(tag, device=0):
         return
     alloc = torch.cuda.memory_allocated(device) / 1024**3
     reserved = torch.cuda.memory_reserved(device) / 1024**3
-    total = torch.cuda.get_device_properties(device).total_mem / 1024**3
+    total = torch.cuda.get_device_properties(device).total_memory / 1024**3
     print(f"  [VRAM {tag}] allocated={alloc:.2f}GB  reserved={reserved:.2f}GB  total={total:.2f}GB", flush=True)
 
 

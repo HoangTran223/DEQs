@@ -198,6 +198,18 @@ class DEQStudent(nn.Module):
             return block_output[0]
         return block_output
 
+    @staticmethod
+    def _linear_stored_dtype(linear_mod):
+        """Dtype of underlying weights (torchdeq weight_norm / spectral_norm use weight_v or weight_orig)."""
+        if hasattr(linear_mod, "weight_v"):
+            return linear_mod.weight_v.dtype
+        if hasattr(linear_mod, "weight_orig"):
+            return linear_mod.weight_orig.dtype
+        w = getattr(linear_mod, "weight", None)
+        if isinstance(w, torch.Tensor):
+            return w.dtype
+        return next(linear_mod.parameters()).dtype
+
     def _run_blocks(self, h, mask, bk):
         mt = self.model_type
         for block in self.deq_blocks:
@@ -249,19 +261,26 @@ class DEQStudent(nn.Module):
         reset_norm(self.deq_blocks)
         reset_norm(self.input_inject)
 
-        was_half = (compute_dtype == torch.float16)
-        if was_half:
+        # Solver uses fp32 activations (x_f32, z). Match block/inject dtypes; embeddings may be fp32 under DeepSpeed.
+        deq_w_dtype = self._linear_stored_dtype(self.input_inject)
+        cast_deq_to_f32 = deq_w_dtype in (torch.float16, torch.bfloat16)
+        if cast_deq_to_f32:
             self.deq_blocks.float()
             self.input_inject.float()
+            # weight_norm / spectral_norm cache `weight` as a plain tensor; .float() only moves Parameters.
+            reset_norm(self.deq_blocks)
+            reset_norm(self.input_inject)
 
         def deq_func(z):
             return self._run_blocks(z + self.input_inject(x_f32), mask_f32, bk_f32)
 
         z_out, info = self.deq(deq_func, z_init)
 
-        if was_half:
-            self.deq_blocks.half()
-            self.input_inject.half()
+        if cast_deq_to_f32:
+            self.deq_blocks.to(deq_w_dtype)
+            self.input_inject.to(deq_w_dtype)
+            reset_norm(self.deq_blocks)
+            reset_norm(self.input_inject)
 
         z_star = z_out[-1].to(compute_dtype)
         logits = self._to_logits(z_star)
